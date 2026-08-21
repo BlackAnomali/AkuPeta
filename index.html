@@ -66,6 +66,15 @@
             cursor: pointer;
             font-weight: bold;
         }
+        /* Tombol Download Backup */
+        #form-panel .btn-download {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -91,6 +100,9 @@
             
             <button type="submit">Simpan ke Peta</button>
         </form>
+
+        <!-- Tombol Download Backup JSON -->
+        <button class="btn-download" onclick="downloadBackup()">Download Backup JSON</button>
     </div>
 
     <!-- Peta Leaflet -->
@@ -141,15 +153,14 @@
 
         // Fungsi Mengatur Ikon Kustom Berdasarkan Kategori
         function getCustomIcon(kategori) {
-            // Tuan Muda bisa mengganti URL di bawah dengan link gambar ikon kustom sendiri (.png / .svg)
             let iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png'; // Default
             
             if (kategori === 'Kuliner') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png'; // Merah untuk Kuliner
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
             } else if (kategori === 'Pedagang Keliling') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png'; // Hijau untuk Pedagang Keliling
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png';
             } else if (kategori === 'Jasa / Lainnya') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png'; // Oranye untuk Jasa
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png';
             }
 
             return L.icon({
@@ -215,6 +226,24 @@
             document.getElementById('addForm').reset();
             location.reload();
         });
+
+        // Fungsi untuk Download Backup Data JSON dari localStorage
+        function downloadBackup() {
+            let localData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
+            
+            if (localData.length === 0) {
+                alert("Belum ada data lokal yang tersimpan di perangkat ini!");
+                return;
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "backup_umkm_hp.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
     </script>
 </body>
 </html>
