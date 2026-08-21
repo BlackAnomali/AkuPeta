@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta UMKM Pribadi</title>
+    
+    <!-- CSS Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: sans-serif;
+        }
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+        #form-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            width: 280px;
+        }
+        #form-panel input, #form-panel textarea, #form-panel select, #form-panel button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #form-panel button {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #form-panel button:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="form-panel">
+        <h3>Tambah Lokasi Baru</h3>
+        <p style="font-size: 0.8em; color: #666; margin-top: 0;">Klik peta untuk ambil koordinat.</p>
+        <form id="addForm">
+            <input type="text" id="nama" placeholder="Nama Tempat / Usaha" required>
+            <select id="kategori">
+                <option value="Kuliner">Kuliner</option>
+                <option value="Pedagang Keliling">Pedagang Keliling</option>
+                <option value="Jasa / Lainnya">Jasa / Lainnya</option>
+            </select>
+            <textarea id="catatan" placeholder="Catatan (Jam buka, keunikan, dll)" rows="3"></textarea>
+            
+            <input type="text" id="lat" placeholder="Latitude" readonly required style="background: #eee;">
+            <input type="text" id="lng" placeholder="Longitude" readonly required style="background: #eee;">
+            
+            <button type="submit">Simpan ke Peta</button>
+        </form>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- JS Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        var map = L.map('map').setView([-8.0954, 112.1609], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let tempMarker = null;
+
+        // Klik peta untuk ambil titik
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            document.getElementById('lat').value = lat;
+            document.getElementById('lng').value = lng;
+
+            if (tempMarker) {
+                map.removeLayer(tempMarker);
+            }
+
+            tempMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup("Titik yang dipilih").openPopup();
+        });
+
+        // Fungsi memuat data (Gabungan dari data.json bawaan + localStorage browser)
+        function loadAllData() {
+            // 1. Ambil data lokal dari browser jika ada
+            let localData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
+
+            // 2. Ambil juga dari file data.json sebagai data awal
+            fetch('data.json')
+                .then(response => response.json())
+                .then(jsonData => {
+                    // Gabungkan data file dan data lokal
+                    let combinedData = [...jsonData, ...localData];
+                    renderMarkers(combinedData);
+                })
+                .catch(() => {
+                    // Jika data.json gagal dimuat, pakai data lokal saja
+                    renderMarkers(localData);
+                });
+        }
+
+        // Fungsi untuk merender marker ke peta
+        function renderMarkers(data) {
+            data.forEach(item => {
+                var marker = L.marker([item.lat, item.lng]).addTo(map);
+                var popupContent = `
+                    <b>${item.nama}</b><br>
+                    <span style="color: #666; font-size: 0.9em;">Kategori: ${item.kategori}</span><hr style="margin: 5px 0;">
+                    ${item.catatan}
+                `;
+                marker.bindPopup(popupContent);
+            });
+        // Di dalam fungsi renderMarkers, kita bedakan data JSON dan localStorage
+        // agar data dari localStorage bisa dihapus berdasarkan id-nya:
+        function hapusData(id) {
+            let localData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
+            let newData = localData.filter(item => item.id !== id);
+                localStorage.setItem('umkm_pribadi', JSON.stringify(newData));
+                 location.reload();
+}                
+            
+        }
+
+        // Jalankan saat pertama buka
+        loadAllData();
+
+        // Simpan data baru ke localStorage browser
+        document.getElementById('addForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newItem = {
+                id: Date.now(),
+                nama: document.getElementById('nama').value,
+                kategori: document.getElementById('kategori').value,
+                lat: parseFloat(document.getElementById('lat').value),
+                lng: parseFloat(document.getElementById('lng').value),
+                catatan: document.getElementById('catatan').value
+            };
+
+            // Ambil data lama dari localStorage
+            let existingData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
+            
+            // Tambah data baru
+            existingData.push(newItem);
+            
+            // Simpan kembali ke localStorage
+            localStorage.setItem('umkm_pribadi', JSON.stringify(existingData));
+
+            alert("Lokasi berhasil disimpan secara permanen di browser!");
+            
+            // Reset form dan reload halaman agar marker langsung muncul
+            document.getElementById('addForm').reset();
+            location.reload();
+        });
+    </script>
+</body>
+</html>

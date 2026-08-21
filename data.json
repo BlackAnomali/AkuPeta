@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "nama": "Warung Pecel Mbah Yuli",
+    "kategori": "Kuliner",
+    "lat": -8.0980,
+    "lng": 112.1550,
+    "catatan": "Buka pagi jam 06.00 - 10.00. Jualan pecel pincuk legendaris."
+  },
+  {
+    "id": 2,
+    "nama": "Pak Slamet (Penjual Kerupuk Keliling)",
+    "kategori": "Pedagang Keliling",
+    "lat": -8.0920,
+    "lng": 112.1650,
+    "catatan": "Biasanya mangkal di sekitar area ini jam 10 pagi."
+  },
+  {
+  "id": 1787329644107,
+  "nama": "Cireng Mas Doezzz",
+  "kategori": "Kuliner",
+  "lat": -8.100752309511952,
+  "lng": 112.16467291116716,
+  "catatan": "Buka Sore Jam 4/5 an sampek habis loh ya 8/10"
+}
+  
+]
