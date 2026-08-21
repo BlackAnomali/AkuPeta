@@ -21,7 +21,7 @@
             width: 100vw;
         }
         
-        /* Tombol Mengambang untuk Membuka Form */
+        /* Tombol Mengambang untuk Membuka/Menutup Form */
         #toggle-btn {
             position: absolute;
             top: 20px;
@@ -30,18 +30,18 @@
             background: #28a745;
             color: white;
             border: none;
-            padding: 12px 16px;
+            padding: 12px 18px;
             border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        /* Panel Form Sederhana (Default Tersembunyi / Display: none) */
+        /* Panel Form Sederhana (Default Tersembunyi: display: none) */
         #form-panel {
             display: none;
             position: absolute;
-            top: 70px;
+            top: 75px;
             right: 20px;
             z-index: 1000;
             background: white;
@@ -70,13 +70,13 @@
 </head>
 <body>
 
-    <!-- Tombol untuk Buka/Tutup Form -->
+    <!-- Tombol Mengambang Pemicu Form -->
     <button id="toggle-btn" onclick="toggleForm()">+ Tambah Lokasi</button>
 
-    <!-- Panel Form Input -->
+    <!-- Panel Form Input (Awalnya Tertutup) -->
     <div id="form-panel">
         <h3>Tambah Lokasi Baru</h3>
-        <p style="font-size: 0.8em; color: #666; margin-top: 0;">Klik peta untuk ambil koordinat.</p>
+        <p style="font-size: 0.8em; color: #666; margin-top: 0;">Klik pada peta untuk mengambil titik koordinat.</p>
         <form id="addForm">
             <input type="text" id="nama" placeholder="Nama Tempat / Usaha" required>
             <select id="kategori">
@@ -93,12 +93,14 @@
         </form>
     </div>
 
+    <!-- Peta Leaflet -->
     <div id="map"></div>
 
     <!-- JS Leaflet.js -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
+        // Inisialisasi Peta (pusat di sekitar Blitar)
         var map = L.map('map').setView([-8.0954, 112.1609], 14);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -108,7 +110,7 @@
 
         let tempMarker = null;
 
-        // Fungsi Buka Tutup Form
+        // Fungsi untuk Buka-Tutup Form Input
         function toggleForm() {
             var panel = document.getElementById('form-panel');
             var btn = document.getElementById('toggle-btn');
@@ -121,7 +123,7 @@
             }
         }
 
-        // Klik peta untuk ambil titik
+        // Klik peta untuk mengambil koordinat & buat marker sementara
         map.on('click', function(e) {
             var lat = e.latlng.lat;
             var lng = e.latlng.lng;
@@ -137,17 +139,17 @@
                 .bindPopup("Titik yang dipilih").openPopup();
         });
 
-        // Contoh membuat Ikon Kustom Berbeda Tiap Kategori
+        // Fungsi Mengatur Ikon Kustom Berdasarkan Kategori
         function getCustomIcon(kategori) {
-            // Tuan Muda bisa mengganti URL di bawah dengan link gambar ikon lokal buatan sendiri (.png / .svg)
+            // Tuan Muda bisa mengganti URL di bawah dengan link gambar ikon kustom sendiri (.png / .svg)
             let iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png'; // Default
             
             if (kategori === 'Kuliner') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png'; // Merah untuk Kuliner
             } else if (kategori === 'Pedagang Keliling') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png';
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png'; // Hijau untuk Pedagang Keliling
             } else if (kategori === 'Jasa / Lainnya') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png';
+                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png'; // Oranye untuk Jasa
             }
 
             return L.icon({
@@ -160,7 +162,7 @@
             });
         }
 
-        // Fungsi memuat data
+        // Memuat data dari data.json dan localStorage secara bersamaan
         function loadAllData() {
             let localData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
 
@@ -175,9 +177,9 @@
                 });
         }
 
+        // Menampilkan marker ke peta
         function renderMarkers(data) {
             data.forEach(item => {
-                // Gunakan ikon kustom berdasarkan kategori
                 var customIcon = getCustomIcon(item.kategori);
                 
                 var marker = L.marker([item.lat, item.lng], { icon: customIcon }).addTo(map);
@@ -192,7 +194,7 @@
 
         loadAllData();
 
-        // Simpan data baru
+        // Menyimpan data baru ke localStorage saat form disubmit
         document.getElementById('addForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
