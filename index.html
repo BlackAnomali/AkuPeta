@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AkuPeta</title>
+    
     <!-- Ikon Kustom untuk Shortcut HP / PWA -->
     <link rel="icon" type="image/png" sizes="192x192" href="logo-peta.png">
     <link rel="apple-touch-icon" sizes="180x180" href="logo-peta.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    
+
     <!-- CSS Leaflet.js -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+
     <style>
         body, html {
             margin: 0;
@@ -25,7 +26,7 @@
             height: 100vh;
             width: 100vw;
         }
-        
+
         /* Tombol Mengambang untuk Membuka/Menutup Form */
         #toggle-btn {
             position: absolute;
@@ -42,7 +43,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        /* Panel Form Sederhana (Default Tersembunyi: display: none) */
+        /* Panel Form Sederhana */
         #form-panel {
             display: none;
             position: absolute;
@@ -71,25 +72,14 @@
             cursor: pointer;
             font-weight: bold;
         }
-        /* Tombol Download Backup */
-        #form-panel .btn-download {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 5px;
-        }
     </style>
 </head>
 <body>
-    <!-- Panggil file JavaScript eksternal kita -->
-    <script src="script.js"></script>
 
     <!-- Tombol Mengambang Pemicu Form -->
     <button id="toggle-btn" onclick="toggleForm()">+ Tambah Lokasi</button>
 
-    <!-- Panel Form Input (Awalnya Tertutup) -->
+    <!-- Panel Form Input -->
     <div id="form-panel">
         <h3>Tambah Lokasi Baru</h3>
         <p style="font-size: 0.8em; color: #666; margin-top: 0;">Klik pada peta untuk mengambil titik koordinat.</p>
@@ -101,15 +91,12 @@
                 <option value="Jasa / Lainnya">Jasa / Lainnya</option>
             </select>
             <textarea id="catatan" placeholder="Catatan (Jam buka, keunikan, dll)" rows="3"></textarea>
-            
+
             <input type="text" id="lat" placeholder="Latitude" readonly required style="background: #eee;">
             <input type="text" id="lng" placeholder="Longitude" readonly required style="background: #eee;">
-            
-            <button type="submit">Simpan ke Peta</button>
-        </form>
 
-        <!-- Tombol Download Backup JSON -->
-        <button class="btn-download" onclick="downloadBackup()">Download Backup JSON</button>
+            <button type="submit">Simpan ke GitHub</button>
+        </form>
     </div>
 
     <!-- Peta Leaflet -->
@@ -117,140 +104,8 @@
 
     <!-- JS Leaflet.js -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <script>
-        // Inisialisasi Peta (pusat di sekitar Blitar)
-        var map = L.map('map').setView([-8.0954, 112.1609], 14);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        let tempMarker = null;
-
-        // Fungsi untuk Buka-Tutup Form Input
-        function toggleForm() {
-            var panel = document.getElementById('form-panel');
-            var btn = document.getElementById('toggle-btn');
-            if (panel.style.display === 'block') {
-                panel.style.display = 'none';
-                btn.innerText = '+ Tambah Lokasi';
-            } else {
-                panel.style.display = 'block';
-                btn.innerText = 'Tutup Form';
-            }
-        }
-
-        // Klik peta untuk mengambil koordinat & buat marker sementara
-        map.on('click', function(e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-
-            document.getElementById('lat').value = lat;
-            document.getElementById('lng').value = lng;
-
-            if (tempMarker) {
-                map.removeLayer(tempMarker);
-            }
-
-            tempMarker = L.marker([lat, lng]).addTo(map)
-                .bindPopup("Titik yang dipilih").openPopup();
-        });
-
-        // Fungsi Mengatur Ikon Kustom Berdasarkan Kategori
-        function getCustomIcon(kategori) {
-            let iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png'; // Default
-            
-            if (kategori === 'Kuliner') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
-            } else if (kategori === 'Pedagang Keliling') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png';
-            } else if (kategori === 'Jasa / Lainnya') {
-                iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png';
-            }
-
-            return L.icon({
-                iconUrl: iconUrl,
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
-        }
-
-        // Memuat data dari data.json dan localStorage secara bersamaan
-        function loadAllData() {
-            let localData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
-
-            fetch('data.json')
-                .then(response => response.json())
-                .then(jsonData => {
-                    let combinedData = [...jsonData, ...localData];
-                    renderMarkers(combinedData);
-                })
-                .catch(() => {
-                    renderMarkers(localData);
-                });
-        }
-
-        // Menampilkan marker ke peta
-        function renderMarkers(data) {
-            data.forEach(item => {
-                var customIcon = getCustomIcon(item.kategori);
-                
-                var marker = L.marker([item.lat, item.lng], { icon: customIcon }).addTo(map);
-                var popupContent = `
-                    <b>${item.nama}</b><br>
-                    <span style="color: #666; font-size: 0.9em;">Kategori: ${item.kategori}</span><hr style="margin: 5px 0;">
-                    ${item.catatan}
-                `;
-                marker.bindPopup(popupContent);
-            });
-        }
-
-        loadAllData();
-
-        // Menyimpan data baru ke localStorage saat form disubmit
-        document.getElementById('addForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const newItem = {
-                id: Date.now(),
-                nama: document.getElementById('nama').value,
-                kategori: document.getElementById('kategori').value,
-                lat: parseFloat(document.getElementById('lat').value),
-                lng: parseFloat(document.getElementById('lng').value),
-                catatan: document.getElementById('catatan').value
-            };
-
-            let existingData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
-            existingData.push(newItem);
-            localStorage.setItem('umkm_pribadi', JSON.stringify(existingData));
-
-            alert("Lokasi berhasil disimpan!");
-            document.getElementById('addForm').reset();
-            location.reload();
-        });
-
-        // Fungsi untuk Download Backup Data JSON dari localStorage
-        function downloadBackup() {
-            let localData = JSON.parse(localStorage.getItem('umkm_pribadi')) || [];
-            
-            if (localData.length === 0) {
-                alert("Belum ada data lokal yang tersimpan di perangkat ini!");
-                return;
-            }
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localData, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "backup_umkm_hp.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-    </script>
+    <!-- File Logika Utama Terpisah -->
+    <script src="script.js"></script>
 </body>
 </html>
