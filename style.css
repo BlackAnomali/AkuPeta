@@ -1,0 +1,308 @@
+/* ==========================================================
+   AKUPETA // LOCAL TACTICAL SYSTEM - MAIN STYLESHEET
+   ========================================================== */
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: #120303;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Bingkai Utama Konsol (Tema Merah Taktis) */
+#console-frame {
+    width: 94vw;
+    height: 92vh;
+    max-width: 1400px;
+    max-height: 900px;
+    background: #1a0505;
+    border: 8px solid #991b1b;
+    box-shadow: 0 0 35px rgba(153, 27, 27, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Header Konsol */
+.console-header {
+    background: #991b1b;
+    color: #ffffff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+    border-bottom: 3px solid #dc2626;
+    flex-shrink: 0;
+}
+
+.header-title-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #22c55e;
+}
+
+/* Tombol Tambah di Header */
+#toggle-btn {
+    background: #dc2626;
+    color: white;
+    border: 2px solid #fca5a5;
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+#toggle-btn:hover {
+    background: #b91c1c;
+}
+
+/* Body (Area Peta) */
+.console-body {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    background-color: #1a0505;
+}
+
+/* Wadah Peta */
+#map {
+    width: 100%;
+    height: 100%;
+    cursor: crosshair !important;
+    background-color: #1a0505;
+}
+
+/* Lapisan Merah Taktis Semi-Transparan di Atas Peta Hitam */
+.console-body::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(220, 38, 38, 0.35); 
+    mix-blend-mode: overlay;
+    pointer-events: none !important; 
+    z-index: 400;
+}
+
+/* Mengabaikan klik pada gambar marker agar tidak menghalangi peta */
+.leaflet-marker-icon {
+    pointer-events: none;
+}
+
+/* Memastikan panel marker dan popup berada di lapis atas */
+.leaflet-pane {
+    z-index: 1000 !important;
+}
+
+/* ==========================================================
+   PANEL FILTER KATEGORI (GAYA RETRO & POSISI KIRI TENGAH)
+   ========================================================== */
+#category-filters {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2500; /* Ditinggikan agar selalu di atas peta dan bisa diklik */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: auto;
+}
+
+.filter-btn {
+    width: 44px;
+    height: 44px;
+    background: #1a0505;
+    border-radius: 0px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    border: 3px solid #ffffff !important;
+    box-shadow: 3px 3px 0px #000000, 6px 6px 0px #991b1b !important;
+}
+
+.filter-btn img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    transition: opacity 0.2s ease;
+}
+
+/* Status AKTIF (Terang / Menyala) */
+.filter-btn.active {
+    background: #2b0a0a;
+    border-color: #ffffff !important;
+}
+.filter-btn.active img {
+    opacity: 1;
+    filter: drop-shadow(0 0 2px #fff);
+}
+
+/* Status OFF (Gelap / Redup / Hide) */
+.filter-btn.off {
+    background: #0d0202;
+    opacity: 0.35;
+    border-color: #7f1d1d !important;
+    box-shadow: 2px 2px 0px #000000 !important;
+}
+.filter-btn.off img {
+    opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+/* Efek saat tombol ditekan */
+.filter-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000000, 3px 3px 0px #991b1b !important;
+}
+
+/* ==========================================================
+   POPUP PIXEL-ART MURNI CSS
+   ========================================================== */
+.leaflet-popup .leaflet-popup-content-wrapper {
+    background: #1a0505 !important;
+    color: #ffffff !important;
+    border-radius: 0px !important;
+    border: 4px solid #ffffff !important;
+    box-shadow: 4px 4px 0px #000000, 8px 8px 0px #991b1b !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    padding: 12px 18px !important;
+}
+
+.leaflet-popup .leaflet-popup-tip-container {
+    width: 20px !important;
+    height: 12px !important;
+    margin-left: -10px !important;
+}
+
+.leaflet-popup .leaflet-popup-tip {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+    box-shadow: 2px 2px 0px #000000 !important;
+    width: 10px !important;
+    height: 10px !important;
+    transform: rotate(45deg) !important;
+    margin: -6px auto 0 auto !important;
+}
+
+.leaflet-popup .leaflet-popup-close-button {
+    color: #f87171 !important;
+    font-weight: bold !important;
+    padding: 4px !important;
+}
+.leaflet-popup .leaflet-popup-close-button:hover {
+    color: #ffffff !important;
+}
+
+.leaflet-popup .leaflet-popup-content {
+    margin: 5px !important;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Panel Form Mengambang */
+#form-panel {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;
+    background: rgba(26, 5, 5, 0.95);
+    border: 2px solid #dc2626;
+    color: #fff;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.8);
+    width: 300px;
+    max-width: 90vw;
+}
+#form-panel input, #form-panel textarea, #form-panel select {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 10px;
+    background: #2b0a0a;
+    border: 1px solid #7f1d1d;
+    color: white;
+    border-radius: 4px;
+    font-family: inherit;
+}
+#form-panel button[type="submit"] {
+    width: 100%;
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+/* Footer Konsol (Running Text) */
+.console-footer {
+    background: #0d0202;
+    color: #f87171;
+    padding: 8px 15px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    border-top: 2px solid #991b1b;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.running-text {
+    display: inline-block;
+    animation: marquee 25s linear infinite;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+/* Responsif HP */
+@media (max-width: 768px) {
+    #console-frame {
+        width: 96vw;
+        height: 96vh;
+        max-width: 100%;
+        max-height: 100%;
+        border: 4px solid #991b1b;
+        border-radius: 6px;
+    }
+    .console-header {
+        font-size: 0.75rem;
+        padding: 8px 12px;
+    }
+}

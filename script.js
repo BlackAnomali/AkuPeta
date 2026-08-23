@@ -1,164 +1,139 @@
-// Inisialisasi Peta (Center Blitar)
-var map = L.map('map').setView([-8.0954, 112.1609], 14);
+// ==========================================
+// AKUPETA // SCRIPT UTAMA & FILTER KATEGORI
+// ==========================================
 
-// Layer Peta Dasar (Bisa diganti CartoDB atau tetap standar OpenStreetMap)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// 1. Inisialisasi Peta (Center Blitar)
+let map = L.map('map', {
+    zoomControl: false 
+}).setView([-8.1018, 112.1648], 14);
+
+// Pindahkan posisi kontrol zoom ke kanan atas
+L.control.zoom({ position: 'topleft' }).addTo(map);
+
+// Menggunakan Tile Layer CartoDB Dark Matter (Peta Dark Mode Taktis)
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
 }).addTo(map);
 
-let tempMarker = null;
-var markersLayer = L.layerGroup().addTo(map);
+// 2. Array global untuk mencatat marker yang tampil (Penting untuk Filter Toggle)
+let markersRegistry = [];
 
-// Konfigurasi GitHub Repository untuk Sinkronisasi Online
-const GITHUB_USER = "BlackAnomali";
-const GITHUB_REPO = "AkuPeta";
-const GITHUB_FILE_PATH = "data.json";
-
-// Fungsi untuk Buka-Tutup Form Input
-function toggleForm() {
-    var panel = document.getElementById('form-panel');
-    var btn = document.getElementById('toggle-btn');
-    if (panel.style.display === 'block') {
-        panel.style.display = 'none';
-        btn.innerText = '+ Tambah Lokasi';
-    } else {
-        panel.style.display = 'block';
-        btn.innerText = 'Tutup Form';
-    }
-}
-
-// Klik peta untuk mengambil koordinat & buat marker sementara
-map.on('click', function(e) {
-    var lat = e.latlng.lat;
-    var lng = e.latlng.lng;
-
-    document.getElementById('lat').value = lat;
-    document.getElementById('lng').value = lng;
-
-    if (tempMarker) {
-        map.removeLayer(tempMarker);
-    }
-
-    tempMarker = L.marker([lat, lng]).addTo(map)
-        .bindPopup("Titik yang dipilih").openPopup();
-});
-
-// Fungsi Mengatur Ikon Kustom Berdasarkan Kategori
+// 3. Fungsi untuk Memuat Ikon Kustom Berdasarkan Kategori
 function getCustomIcon(kategori) {
-    let iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png';
+    let iconUrl = 'lainnya.svg';
 
     if (kategori === 'Kuliner') {
-        iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png';
+        iconUrl = 'kuliner.svg';
     } else if (kategori === 'Pedagang Keliling') {
-        iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png';
+        iconUrl = 'pak-ogah.svg';
     } else if (kategori === 'Jasa / Lainnya') {
-        iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png';
+        iconUrl = 'lainnya.svg';
     }
 
     return L.icon({
         iconUrl: iconUrl,
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
+        iconSize: [32, 32],       
+        iconAnchor: [16, 32],     
+        popupAnchor: [0, -35]     
     });
 }
 
-// Fungsi Memuat Data dari GitHub (data.json)
-async function loadDataFromGitHub() {
-    try {
-        let response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_FILE_PATH}?t=` + new Date().getTime());
-        if (!response.ok) throw new Error("Gagal memuat data dari GitHub");
-        let data = await response.json();
-        renderMarkers(data);
-    } catch (error) {
-        console.error("Error memuat data:", error);
+// 4. Fungsi untuk Menambahkan Marker ke Peta dan Mendaftarkannya ke Registry
+function addMarkerToMap(item) {
+    let marker = L.marker([item.lat, item.lng], { 
+        icon: getCustomIcon(item.kategori) 
+    }).bindPopup(`
+        <strong>${item.nama}</strong><br>
+        <span style="color: #fca5a5;">Kategori: ${item.kategori}</span>
+        <hr style="border:0; border-top:1px solid #dc2626; margin:6px 0;">
+        ${item.catatan || ''}
+    `);
+
+    // Catat ke dalam array registry untuk fitur filter toggle
+    markersRegistry.push({
+        category: item.kategori,
+        marker: marker
+    });
+
+    // Tampilkan marker ke peta secara default
+    marker.addTo(map);
+}
+
+// 5. Mengambil Data dari file data.json
+fetch('data.json')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Gagal mengambil data.json');
+        }
+        return response.json();
+    })
+    .then(data => {
+        data.forEach(item => {
+            addMarkerToMap(item);
+        });
+    })
+    .catch(error => console.error('Error memuat JSON:', error));
+
+// 6. FUNGSI UTAMA: Toggle Filter Kategori (Hide / Show Marker)
+function toggleCategory(categoryName, buttonElement) {
+    // Ubah visual tombol (aktif / off)
+    buttonElement.classList.toggle('active');
+    buttonElement.classList.toggle('off');
+
+    let isActive = buttonElement.classList.contains('active');
+
+    // Sembunyikan atau tampilkan marker berdasarkan kategori yang diklik
+    markersRegistry.forEach(item => {
+        if (item.category === categoryName) {
+            if (isActive) {
+                item.marker.addTo(map); // Munculkan kembali marker
+            } else {
+                map.removeLayer(item.marker); // Sembunyikan marker dari peta
+            }
+        }
+    });
+}
+
+// 7. Logika Panel Form Tambah Lokasi
+const formPanel = document.getElementById('form-panel');
+
+function toggleForm() {
+    if (formPanel.style.display === 'block') {
+        formPanel.style.display = 'none';
+    } else {
+        formPanel.style.display = 'block';
     }
 }
 
-// Fungsi Menampilkan Marker ke Peta
-function renderMarkers(dataList) {
-    markersLayer.clearLayers();
-    dataList.forEach(item => {
-        var customIcon = getCustomIcon(item.kategori);
-        var marker = L.marker([item.lat, item.lng], { icon: customIcon }).addTo(markersLayer);
-        
-        var popupContent = `
-            <b>${item.nama}</b><br>
-            <span style="color: #666; font-size: 0.9em;">Kategori: ${item.kategori}</span><hr style="margin: 5px 0;">
-            ${item.catatan || ''}
-        `;
-        marker.bindPopup(popupContent);
-    });
-}
+// Ambil koordinat saat peta diklik untuk form
+map.on('click', function(e) {
+    document.getElementById('lat').value = e.latlng.lat.toFixed(6);
+    document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+    formPanel.style.display = 'block';
+});
 
-// Jalankan saat pertama kali web dibuka
-loadDataFromGitHub();
-
-// Event Listener Submit Form untuk Kirim Langsung ke GitHub API
-document.getElementById('addForm').addEventListener('submit', async function(e) {
+// Handle Submit Form Tambah Lokasi Baru
+document.getElementById('addForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const nama = document.getElementById('nama').value;
-    const kategori = document.getElementById('kategori').value;
-    const lat = parseFloat(document.getElementById('lat').value);
-    const lng = parseFloat(document.getElementById('lng').value);
-    const catatan = document.getElementById('catatan').value;
+    let newItem = {
+        nama: document.getElementById('nama').value,
+        kategori: document.getElementById('kategori').value,
+        catatan: document.getElementById('catatan').value,
+        lat: parseFloat(document.getElementById('lat').value),
+        lng: parseFloat(document.getElementById('lng').value)
+    };
 
-    // Ambil Token dari localStorage browser
-    let token = localStorage.getItem('github_pat');
-    if (!token) {
-        token = prompt("Masukkan Personal Access Token (PAT) GitHub Tuan Muda untuk izin simpan data:");
-        if (!token) return alert("Token diperlukan untuk menyimpan data secara online!");
-        localStorage.setItem('github_pat', token);
-    }
+    // Tambahkan ke peta & registry
+    addMarkerToMap(newItem);
 
-    alert("Menyimpan data secara online ke GitHub...");
-
-    try {
-        const getFileUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
-        const resGet = await fetch(getFileUrl, {
-            headers: { "Authorization": `token ${token}` }
-        });
-        if (!resGet.ok) throw new Error("Gagal mengambil SHA file dari GitHub. Cek kembali Token Tuan Muda.");
-        
-        const fileData = await resGet.json();
-        const sha = fileData.sha;
-        
-        // Dekode isi file lama dari Base64
-        const decodedContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
-        
-        // Masukkan data baru ke dalam array
-        decodedContent.push({ nama, kategori, lat, lng, catatan });
-
-        // Encode kembali ke Base64
-        const updatedContent = btoa(unescape(encodeURIComponent(JSON.stringify(decodedContent, null, 2))));
-
-        // Kirim pembaruan ke GitHub API
-        const resPut = await fetch(getFileUrl, {
-            method: 'PUT',
-            headers: {
-                "Authorization": `token ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: `Tambah data UMKM baru: ${nama} oleh Tuan Muda`,
-                content: updatedContent,
-                sha: sha
-            })
-        });
-
-        if (!resPut.ok) throw new Error("Gagal mengunggah data ke GitHub.");
-
-        alert("Berhasil! Data tersimpan secara online.");
-        document.getElementById('addForm').reset();
-        toggleForm();
-        loadDataFromGitHub(); // Refresh peta otomatis
-
-    } catch (error) {
-        console.error(error);
-        alert("Terjadi kesalahan: " + error.message);
-    }
+    // Reset form dan tutup panel
+    this.reset();
+    formPanel.style.display = 'none';
 });
+
+// 8. Fix Ukuran Peta Agar Titik Koordinat Tidak Geser
+setTimeout(function() {
+    map.invalidateSize();
+}, 200);

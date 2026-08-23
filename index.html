@@ -14,98 +14,72 @@
     <!-- CSS Leaflet.js -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            font-family: sans-serif;
-        }
-        #map {
-            height: 100vh;
-            width: 100vw;
-        }
-
-        /* Tombol Mengambang untuk Membuka/Menutup Form */
-        #toggle-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 1001;
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        /* Panel Form Sederhana */
-        #form-panel {
-            display: none;
-            position: absolute;
-            top: 75px;
-            right: 20px;
-            z-index: 1000;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            width: 280px;
-            max-width: 90vw;
-        }
-        #form-panel input, #form-panel textarea, #form-panel select, #form-panel button {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        #form-panel button[type="submit"] {
-            background: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-    </style>
+    <!-- Menghubungkan ke File style.css -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Tombol Mengambang Pemicu Form -->
-    <button id="toggle-btn" onclick="toggleForm()">+ Tambah Lokasi</button>
+    <!-- Bingkai Utama Konsol -->
+    <div id="console-frame">
+        
+        <!-- Header Konsol -->
+        <div class="console-header">
+            <div class="header-title-area">
+                <div class="status-dot"></div>
+                <span>AKUPETA // LOCAL TACTICAL SYSTEM</span>
+            </div>
+            <button id="toggle-btn" onclick="toggleForm()">+ Tambah Lokasi</button>
+        </div>
 
-    <!-- Panel Form Input -->
-    <div id="form-panel">
-        <h3>Tambah Lokasi Baru</h3>
-        <p style="font-size: 0.8em; color: #666; margin-top: 0;">Klik pada peta untuk mengambil titik koordinat.</p>
-        <form id="addForm">
-            <input type="text" id="nama" placeholder="Nama Tempat / Usaha" required>
-            <select id="kategori">
-                <option value="Kuliner">Kuliner</option>
-                <option value="Pedagang Keliling">Pedagang Keliling</option>
-                <option value="Jasa / Lainnya">Jasa / Lainnya</option>
-            </select>
-            <textarea id="catatan" placeholder="Catatan (Jam buka, keunikan, dll)" rows="3"></textarea>
+        <!-- Area Peta & Kontrol -->
+        <div class="console-body">
+            
+            <!-- Panel Form Input -->
+            <div id="form-panel">
+                <h3>Tambah Lokasi Baru</h3>
+                <p style="font-size: 0.8em; color: #fca5a5; margin-top: 0;">Klik peta untuk ambil koordinat.</p>
+                <form id="addForm">
+                    <input type="text" id="nama" placeholder="Nama Tempat / Usaha" required>
+                    <select id="kategori">
+                        <option value="Kuliner">Kuliner</option>
+                        <option value="Pedagang Keliling">Pedagang Keliling</option>
+                        <option value="Jasa / Lainnya">Jasa / Lainnya</option>
+                    </select>
+                    <textarea id="catatan" placeholder="Catatan..." rows="2"></textarea>
+                    <input type="text" id="lat" placeholder="Latitude" readonly required style="background: #2b0a0a; color: #fff;">
+                    <input type="text" id="lng" placeholder="Longitude" readonly required style="background: #2b0a0a; color: #fff;">
+                    <button type="submit">Simpan ke GitHub</button>
+                </form>
+            </div>
 
-            <input type="text" id="lat" placeholder="Latitude" readonly required style="background: #eee;">
-            <input type="text" id="lng" placeholder="Longitude" readonly required style="background: #eee;">
+            <!-- Tombol Filter Kategori (Vertikal di Kiri Tengah) -->
+            <div id="category-filters">
+                <button class="filter-btn active" onclick="toggleCategory('Kuliner', this)" title="Kuliner">
+                    <img src="kuliner.svg" alt="Kuliner">
+                </button>
+                <button class="filter-btn active" onclick="toggleCategory('Pedagang Keliling', this)" title="Pedagang Keliling">
+                    <img src="pak-ogah.svg" alt="Pedagang">
+                </button>
+                <button class="filter-btn active" onclick="toggleCategory('Jasa / Lainnya', this)" title="Jasa">
+                    <img src="lainnya.svg" alt="Jasa">
+                </button>
+            </div>
 
-            <button type="submit">Simpan ke GitHub</button>
-        </form>
+            <!-- Peta Leaflet -->
+            <div id="map"></div>
+        </div>
+
+        <!-- Footer Konsol (Running Text) -->
+        <div class="console-footer">
+            <div class="running-text">
+                STATUS: SECURE LINK ACTIVE &nbsp;&bull;&nbsp; SECTOR: BLITAR, JAWA TIMUR &nbsp;&bull;&nbsp; SYSTEM READY FOR DATA SYNC &nbsp;&bull;&nbsp; TUAN MUDA CONTROL CENTER
+            </div>
+        </div>
     </div>
 
-    <!-- Peta Leaflet -->
-    <div id="map"></div>
-
-    <!-- JS Leaflet.js -->
+    <!-- Script Leaflet, Definisi Ikon, & Script Utama -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- File Logika Utama Terpisah -->
+    <script src="icons.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
