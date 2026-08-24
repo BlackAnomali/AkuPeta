@@ -32,6 +32,7 @@ body, html {
     flex-direction: column;
     border-radius: 8px;
     overflow: hidden;
+    position: relative; /* Penting agar elemen absolute di dalamnya terikat di dalam frame */
 }
 
 /* Header Konsol */
@@ -47,6 +48,7 @@ body, html {
     letter-spacing: 1.5px;
     border-bottom: 3px solid #dc2626;
     flex-shrink: 0;
+    z-index: 2000;
 }
 
 .header-title-area {
@@ -75,6 +77,7 @@ body, html {
     font-family: inherit;
     font-size: 0.9rem;
 }
+
 #toggle-btn:hover {
     background: #b91c1c;
 }
@@ -104,9 +107,9 @@ body, html {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(220, 38, 38, 0.35); 
+    background-color: rgba(220, 38, 38, 0.35);
     mix-blend-mode: overlay;
-    pointer-events: none !important; 
+    pointer-events: none !important;
     z-index: 400;
 }
 
@@ -128,7 +131,7 @@ body, html {
     left: 15px;
     top: 50%;
     transform: translateY(-50%);
-    z-index: 2500; /* Ditinggikan agar selalu di atas peta dan bisa diklik */
+    z-index: 2500; 
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -161,6 +164,7 @@ body, html {
     background: #2b0a0a;
     border-color: #ffffff !important;
 }
+
 .filter-btn.active img {
     opacity: 1;
     filter: drop-shadow(0 0 2px #fff);
@@ -173,6 +177,7 @@ body, html {
     border-color: #7f1d1d !important;
     box-shadow: 2px 2px 0px #000000 !important;
 }
+
 .filter-btn.off img {
     opacity: 0.3;
     filter: grayscale(100%);
@@ -218,6 +223,7 @@ body, html {
     font-weight: bold !important;
     padding: 4px !important;
 }
+
 .leaflet-popup .leaflet-popup-close-button:hover {
     color: #ffffff !important;
 }
@@ -228,7 +234,9 @@ body, html {
     line-height: 1.4;
 }
 
-/* Panel Form Mengambang */
+/* ==========================================================
+   PANEL FORM MENGAMBANG & JENDELA MODAL VIEW MORE
+   ========================================================== */
 #form-panel {
     display: none;
     position: absolute;
@@ -244,6 +252,7 @@ body, html {
     width: 300px;
     max-width: 90vw;
 }
+
 #form-panel input, #form-panel textarea, #form-panel select {
     width: 100%;
     margin-bottom: 12px;
@@ -254,6 +263,7 @@ body, html {
     border-radius: 4px;
     font-family: inherit;
 }
+
 #form-panel button[type="submit"] {
     width: 100%;
     background: #16a34a;
@@ -264,6 +274,50 @@ body, html {
     font-weight: bold;
     border-radius: 4px;
     font-family: inherit;
+}
+
+/* Jendela Modal View More (Retro Floating Card di Pojok Kanan Atas) */
+#info-modal {
+    display: none;
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    left: auto;
+    bottom: auto;
+    transform: scale(0.2);
+    transform-origin: top right;
+    width: 0;
+    height: 0;
+    background: rgba(18, 2, 2, 0.95);
+    border: 3px solid #ffffff;
+    box-shadow: 4px 4px 0px #000000, 8px 8px 0px #dc2626;
+    z-index: 9999;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Ukuran aktif saat modal dibuka */
+#info-modal.active {
+    width: 320px;
+    height: 160px;
+    transform: scale(1);
+    padding: 12px;
+}
+
+.modal-content-inner {
+    opacity: 0;
+    transition: opacity 0.2s ease 0.15s;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+#info-modal.active .modal-content-inner {
+    opacity: 1;
 }
 
 /* Footer Konsol (Running Text) */
@@ -279,6 +333,7 @@ body, html {
     flex-shrink: 0;
     overflow: hidden;
     white-space: nowrap;
+    z-index: 2000;
 }
 
 .running-text {

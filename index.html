@@ -3,83 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AkuPeta</title>
+    <title>AKUPETA // LOCAL TACTICAL SYSTEM</title>
     
-    <!-- Ikon Kustom untuk Shortcut HP / PWA -->
-    <link rel="icon" type="image/png" sizes="192x192" href="logo-peta.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="logo-peta.png">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-
-    <!-- CSS Leaflet.js -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-    <!-- Menghubungkan ke File style.css -->
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Bingkai Utama Konsol -->
+    <!-- Bingkai Utama Konsol (Tactical Container) -->
     <div id="console-frame">
         
         <!-- Header Konsol -->
         <div class="console-header">
             <div class="header-title-area">
-                <div class="status-dot"></div>
+                <span class="status-dot"></span>
                 <span>AKUPETA // LOCAL TACTICAL SYSTEM</span>
             </div>
             <button id="toggle-btn" onclick="toggleForm()">+ Tambah Lokasi</button>
         </div>
 
-        <!-- Area Peta & Kontrol -->
+        <!-- Body Area Peta & Tombol Filter -->
         <div class="console-body">
             
-            <!-- Panel Form Input -->
-            <div id="form-panel">
-                <h3>Tambah Lokasi Baru</h3>
-                <p style="font-size: 0.8em; color: #fca5a5; margin-top: 0;">Klik peta untuk ambil koordinat.</p>
-                <form id="addForm">
-                    <input type="text" id="nama" placeholder="Nama Tempat / Usaha" required>
-                    <select id="kategori">
-                        <option value="Kuliner">Kuliner</option>
-                        <option value="Pedagang Keliling">Pedagang Keliling</option>
-                        <option value="Jasa / Lainnya">Jasa / Lainnya</option>
-                    </select>
-                    <textarea id="catatan" placeholder="Catatan..." rows="2"></textarea>
-                    <input type="text" id="lat" placeholder="Latitude" readonly required style="background: #2b0a0a; color: #fff;">
-                    <input type="text" id="lng" placeholder="Longitude" readonly required style="background: #2b0a0a; color: #fff;">
-                    <button type="submit">Simpan ke GitHub</button>
-                </form>
-            </div>
-
-            <!-- Tombol Filter Kategori (Vertikal di Kiri Tengah) -->
+            <!-- Tombol Filter Ikon (Center Kiri) -->
             <div id="category-filters">
                 <button class="filter-btn active" onclick="toggleCategory('Kuliner', this)" title="Kuliner">
                     <img src="kuliner.svg" alt="Kuliner">
                 </button>
                 <button class="filter-btn active" onclick="toggleCategory('Pedagang Keliling', this)" title="Pedagang Keliling">
-                    <img src="pak-ogah.svg" alt="Pedagang">
+                    <img src="pak-ogah.svg" alt="Pedagang Keliling">
                 </button>
-                <button class="filter-btn active" onclick="toggleCategory('Jasa / Lainnya', this)" title="Jasa">
-                    <img src="lainnya.svg" alt="Jasa">
+                <button class="filter-btn active" onclick="toggleCategory('Jasa / Lainnya', this)" title="Jasa / Lainnya">
+                    <img src="lainnya.svg" alt="Jasa / Lainnya">
                 </button>
             </div>
 
-            <!-- Peta Leaflet -->
+            <!-- Peta Utama -->
             <div id="map"></div>
+
+            <!-- Panel Form Tambah Lokasi -->
+            <div id="form-panel">
+                <h3>Tambah Lokasi Baru</h3>
+                <p style="font-size: 0.75em; color: #fca5a5; margin-top: 0;">Klik peta untuk ambil koordinat.</p>
+                <form id="addForm">
+                    <input type="text" id="nama" required placeholder="Nama Tempat / Usaha">
+                    
+                    <select id="kategori">
+                        <option value="Kuliner">Kuliner</option>
+                        <option value="Pedagang Keliling">Pedagang Keliling</option>
+                        <option value="Jasa / Lainnya">Jasa / Lainnya</option>
+                    </select>
+
+                    <textarea id="catatan" placeholder="Catatan..."></textarea>
+                    
+                    <input type="text" id="lat" readonly required placeholder="Latitude">
+                    <input type="text" id="lng" readonly required placeholder="Longitude">
+
+                    <button type="submit">Simpan ke GitHub</button>
+                </form>
+            </div>
+
+            <!-- Jendela Modal View More (Animasi Retro di Pojok Kanan Atas) -->
+            <div id="info-modal">
+                <div class="modal-content-inner">
+                    <button onclick="closeModal()" style="position: absolute; top: -2px; right: -2px; background: #dc2626; color: white; border: 1px solid #fff; width: 20px; height: 20px; cursor: pointer; font-weight: bold; font-size: 0.75em; display: flex; align-items: center; justify-content: center; z-index: 10;">X</button>
+                    <h4 id="modal-title" style="margin: 0 0 6px 0; color: #fca5a5; border-bottom: 1px dashed #dc2626; padding-bottom: 4px; font-size: 0.85em; width: 85%;">Judul Lokasi</h4>
+                    <div style="display: flex; gap: 10px; flex-grow: 1; align-items: center;">
+                        <div style="width: 90px; height: 80px; background: #ffffff; border: 1px solid #000; display: flex; align-items: center; justify-content: center; color: #000; font-size: 0.65em; font-weight: bold; flex-shrink: 0;">
+                            [ FOTO ]
+                        </div>
+                        <div style="flex-grow: 1; font-size: 0.75em; overflow-y: auto; line-height: 1.3; color: #fff;">
+                            <p style="margin: 0 0 4px 0;"><strong>Kat:</strong> <span id="modal-category">-</span></p>
+                            <p style="margin: 0;"><strong>Catatan:</strong> <span id="modal-desc">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Footer Konsol (Running Text) -->
+        <!-- Footer Konsol dengan Running Text -->
         <div class="console-footer">
             <div class="running-text">
-                STATUS: SECURE LINK ACTIVE &nbsp;&bull;&nbsp; SECTOR: BLITAR, JAWA TIMUR &nbsp;&bull;&nbsp; SYSTEM READY FOR DATA SYNC &nbsp;&bull;&nbsp; TUAN MUDA CONTROL CENTER
+                STATUS: SECURE LINK ACTIVE &nbsp;//&nbsp; SECTOR: BLITAR, JAWA TIMUR &nbsp;//&nbsp; SYSTEM READY FOR DATA SYNC &nbsp;//&nbsp; TUAN MUDA CONTROL CENTER
             </div>
         </div>
+
     </div>
 
-    <!-- Script Leaflet, Definisi Ikon, & Script Utama -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="icons.js"></script>
+    <!-- Custom Script -->
     <script src="script.js"></script>
 </body>
 </html>

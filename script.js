@@ -1,5 +1,5 @@
 // ==========================================
-// AKUPETA // SCRIPT UTAMA & FILTER KATEGORI
+// AKUPETA // SCRIPT UTAMA, FILTER IKON & GITHUB API SYNC
 // ==========================================
 
 // 1. Inisialisasi Peta (Center Blitar)
@@ -7,17 +7,23 @@ let map = L.map('map', {
     zoomControl: false 
 }).setView([-8.1018, 112.1648], 14);
 
-// Pindahkan posisi kontrol zoom ke kanan atas
+// Pindahkan posisi kontrol zoom ke kiri atas / sesuai selera
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
-// Menggunakan Tile Layer CartoDB Dark Matter (Peta Dark Mode Taktis)
+// Menggunakan Tile Layer CartoDB Dark Matter
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
 }).addTo(map);
 
-// 2. Array global untuk mencatat marker yang tampil (Penting untuk Filter Toggle)
+// 2. Array global & Layer Group untuk registry marker & filter
 let markersRegistry = [];
+var markersLayer = L.layerGroup().addTo(map);
+
+// Konfigurasi GitHub Repository
+const GITHUB_USER = "BlackAnomali";
+const GITHUB_REPO = "AkuPeta";
+const GITHUB_FILE_PATH = "data.json";
 
 // 3. Fungsi untuk Memuat Ikon Kustom Berdasarkan Kategori
 function getCustomIcon(kategori) {
@@ -39,57 +45,65 @@ function getCustomIcon(kategori) {
     });
 }
 
-// 4. Fungsi untuk Menambahkan Marker ke Peta dan Mendaftarkannya ke Registry
+// 4. Fungsi Memuat Data dari GitHub
+async function loadDataFromGitHub() {
+    try {
+        let response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_FILE_PATH}?t=` + new Date().getTime());
+        if (!response.ok) throw new Error("Gagal memuat data dari GitHub");
+        let dataList = await response.json();
+        
+        markersRegistry = [];
+        markersLayer.clearLayers();
+
+        dataList.forEach(item => {
+            addMarkerToMap(item);
+        });
+    } catch (error) {
+        console.error("Error memuat data:", error);
+    }
+}
+
+// 5. Fungsi untuk Menambahkan Marker ke Peta
 function addMarkerToMap(item) {
     let marker = L.marker([item.lat, item.lng], { 
         icon: getCustomIcon(item.kategori) 
     }).bindPopup(`
-        <strong>${item.nama}</strong><br>
-        <span style="color: #fca5a5;">Kategori: ${item.kategori}</span>
-        <hr style="border:0; border-top:1px solid #dc2626; margin:6px 0;">
-        ${item.catatan || ''}
+        <div style="font-family: 'Courier New', Courier, monospace;">
+            <strong style="font-size: 1.1em; color: #fff;">${item.nama}</strong><br>
+            <span style="color: #fca5a5; font-size: 0.9em;">Kategori: ${item.kategori}</span>
+            <hr style="border:0; border-top:1px dashed #dc2626; margin:6px 0;">
+            <div style="font-size: 0.85em; margin-bottom: 10px; color: #ccc;">${item.catatan || ''}</div>
+            <button onclick="openModal('${item.nama.replace(/'/g, "\\'")}', '${item.kategori}', '${(item.catatan || '').replace(/'/g, "\\'")}')" 
+                style="background: #dc2626; color: white; border: 1px solid #fff; padding: 6px 10px; cursor: pointer; font-size: 0.8em; font-weight: bold; width: 100%; border-radius: 0px; box-shadow: 2px 2px 0px rgba(255,255,255,0.3);">
+                VIEW MORE &gt;&gt;
+            </button>
+        </div>
     `);
 
-    // Catat ke dalam array registry untuk fitur filter toggle
     markersRegistry.push({
         category: item.kategori,
         marker: marker
     });
 
-    // Tampilkan marker ke peta secara default
-    marker.addTo(map);
+    marker.addTo(markersLayer);
 }
 
-// 5. Mengambil Data dari file data.json
-fetch('data.json')
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Gagal mengambil data.json');
-        }
-        return response.json();
-    })
-    .then(data => {
-        data.forEach(item => {
-            addMarkerToMap(item);
-        });
-    })
-    .catch(error => console.error('Error memuat JSON:', error));
+// Jalankan saat pertama kali web dibuka
+loadDataFromGitHub();
 
-// 6. FUNGSI UTAMA: Toggle Filter Kategori (Hide / Show Marker)
+// 6. FUNGSI UTAMA: Toggle Filter Kategori
 function toggleCategory(categoryName, buttonElement) {
-    // Ubah visual tombol (aktif / off)
     buttonElement.classList.toggle('active');
     buttonElement.classList.toggle('off');
 
     let isActive = buttonElement.classList.contains('active');
 
-    // Sembunyikan atau tampilkan marker berdasarkan kategori yang diklik
     markersRegistry.forEach(item => {
         if (item.category === categoryName) {
             if (isActive) {
-                item.marker.addTo(map); // Munculkan kembali marker
+                item.marker.addTo(markersLayer);
             } else {
-                map.removeLayer(item.marker); // Sembunyikan marker dari peta
+                markersLayer.removeLayer(item.marker);
             }
         }
     });
@@ -106,34 +120,112 @@ function toggleForm() {
     }
 }
 
-// Ambil koordinat saat peta diklik untuk form
 map.on('click', function(e) {
     document.getElementById('lat').value = e.latlng.lat.toFixed(6);
     document.getElementById('lng').value = e.latlng.lng.toFixed(6);
     formPanel.style.display = 'block';
 });
 
-// Handle Submit Form Tambah Lokasi Baru
-document.getElementById('addForm').addEventListener('submit', function(e) {
+// 8. Event Listener Submit Form ke GitHub API
+document.getElementById('addForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    let newItem = {
-        nama: document.getElementById('nama').value,
-        kategori: document.getElementById('kategori').value,
-        catatan: document.getElementById('catatan').value,
-        lat: parseFloat(document.getElementById('lat').value),
-        lng: parseFloat(document.getElementById('lng').value)
-    };
+    const nama = document.getElementById('nama').value;
+    const kategori = document.getElementById('kategori').value;
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lng = parseFloat(document.getElementById('lng').value);
+    const catatan = document.getElementById('catatan').value;
 
-    // Tambahkan ke peta & registry
-    addMarkerToMap(newItem);
+    let token = localStorage.getItem('github_pat');
+    if (!token) {
+        token = prompt("Masukkan Personal Access Token (PAT) GitHub Tuan Muda:");
+        if (!token) return alert("Token diperlukan untuk menyimpan data!");
+        localStorage.setItem('github_pat', token);
+    }
 
-    // Reset form dan tutup panel
-    this.reset();
-    formPanel.style.display = 'none';
+    alert("Menyimpan data secara online ke GitHub...");
+
+    try {
+        const getFileUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+        
+        const resGet = await fetch(getFileUrl, {
+            headers: { 
+                "Authorization": `token ${token}`,
+                "Accept": "application/vnd.github.v3+json"
+            }
+        });
+        if (!resGet.ok) throw new Error("Gagal mengambil data file dari GitHub.");
+        
+        const fileData = await resGet.json();
+        const sha = fileData.sha;
+        
+        let decodedContent = [];
+        try {
+            decodedContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
+        } catch (err) {
+            console.warn("Format file kosong atau gagal di-parse.");
+        }
+        
+        decodedContent.push({ nama, kategori, lat, lng, catatan });
+
+        const updatedContent = btoa(unescape(encodeURIComponent(JSON.stringify(decodedContent, null, 2))));
+
+        const resPut = await fetch(getFileUrl, {
+            method: 'PUT',
+            headers: {
+                "Authorization": `token ${token}`,
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github.v3+json"
+            },
+            body: JSON.stringify({
+                message: `Tambah lokasi: ${nama} oleh Tuan Muda`,
+                content: updatedContent,
+                sha: sha
+            })
+        });
+
+        if (!resPut.ok) {
+            let errJson = await resPut.json();
+            throw new Error(errJson.message || "Gagal mengunggah data.");
+        }
+
+        alert("Berhasil! Data tersimpan ke GitHub.");
+        this.reset();
+        formPanel.style.display = 'none';
+        loadDataFromGitHub();
+
+    } catch (error) {
+        console.error(error);
+        alert("Terjadi kesalahan: " + error.message);
+    }
 });
 
-// 8. Fix Ukuran Peta Agar Titik Koordinat Tidak Geser
+// 9. Fungsionalitas Modal Animasi Retro (View More)
+function openModal(nama, kategori, catatan) {
+    map.closePopup();
+
+    document.getElementById('modal-title').innerText = nama;
+    document.getElementById('modal-category').innerText = kategori;
+    document.getElementById('modal-desc').innerText = catatan;
+
+    const modal = document.getElementById('info-modal');
+    modal.style.display = 'block';
+    
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+}
+
+function closeModal() {
+    const modal = document.getElementById('info-modal');
+    modal.classList.remove('active');
+    
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+}
+
+// 10. Fix Ukuran Peta Agar Tidak Pecah
 setTimeout(function() {
     map.invalidateSize();
-}, 200);
+}, 300);
