@@ -117,6 +117,7 @@ function toggleForm() {
         formPanel.style.display = 'none';
     } else {
         formPanel.style.display = 'block';
+        closeModal();
     }
 }
 
