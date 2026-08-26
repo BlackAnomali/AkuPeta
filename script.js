@@ -10,9 +10,10 @@ let map = L.map('map', {
 // Pindahkan posisi kontrol zoom ke kiri atas / sesuai selera
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
-L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-    maxZoom: 20,
-    attribution: '&copy; Stadia Maps'
+// Menggunakan OpenStreetMap versi tema gelap gratis tanpa API Key
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
 }).addTo(map);
 
 // 2. Array global & Layer Group untuk registry marker & filter
