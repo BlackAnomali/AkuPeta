@@ -10,10 +10,9 @@ let map = L.map('map', {
 // Pindahkan posisi kontrol zoom ke kiri atas / sesuai selera
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
-// Menggunakan Tile Layer CartoDB Dark Matter
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    attribution: '&copy; Stadia Maps'
 }).addTo(map);
 
 // 2. Array global & Layer Group untuk registry marker & filter
