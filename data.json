@@ -1,11 +1,17 @@
 [
   {
-  "id": 1787329644107,
-  "nama": "Cireng Mas Doezzz",
-  "kategori": "Kuliner",
-  "lat": -8.100752309511952,
-  "lng": 112.16467291116716,
-  "catatan": "Buka Sore Jam 4/5 an sampek habis loh ya 8/10"
-}
-  
+    "id": 1787329644107,
+    "nama": "Cireng Mas Doezzz",
+    "kategori": "Kuliner",
+    "lat": -8.100752309511952,
+    "lng": 112.16467291116716,
+    "catatan": "Buka Sore Jam 4/5 an sampek habis loh ya 8/10"
+  },
+  {
+    "nama": "Dimsum Veteran ",
+    "kategori": "Kuliner",
+    "lat": -8.104146,
+    "lng": 112.167851,
+    "catatan": "Enak jir 8/10"
+  }
 ]
